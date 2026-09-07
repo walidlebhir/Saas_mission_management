@@ -11,7 +11,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { UserService } from './user.service.js';
+import { UserService, SafeUser } from './user.service.js';
 import { CreateUserDto } from './Dto/CreateUserDto.js';
 import { UpdateUserDto } from './Dto/UpdateUserDto.js';
 
@@ -24,26 +24,41 @@ export class UserController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Add a new user' })
-  createUser(@Body() dto: CreateUserDto) {
-    return this.userService.createUser(dto);
+  async createUser(@Body() dto: CreateUserDto): Promise<SafeUser> {
+    return this.userService.sanitizeUser(await this.userService.createUser(dto));
   }
 
   @Get()
   @ApiOperation({ summary: 'List all users' })
-  getUsers() {
-    return this.userService.getUsers();
+  async getUsers(): Promise<SafeUser[]> {
+    const users = await this.userService.getUsers();
+    return users.map((user) => this.userService.sanitizeUser(user));
+  }
+
+  @Get('organization/:organizationId')
+  @ApiOperation({ summary: 'List users by organization' })
+  async getUsersByOrganization(
+    @Param('organizationId', ParseUUIDPipe) organizationId: string,
+  ): Promise<SafeUser[]> {
+    const users = await this.userService.getUsersByOrganization(organizationId);
+    return users.map((user) => this.userService.sanitizeUser(user));
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a user by id' })
-  getUserById(@Param('id', ParseUUIDPipe) id: string) {
-    return this.userService.getUserById(id);
+  async getUserById(@Param('id', ParseUUIDPipe) id: string): Promise<SafeUser> {
+    return this.userService.sanitizeUser(await this.userService.getUserById(id));
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a user' })
-  updateUser(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateUserDto) {
-    return this.userService.updateUser(id, dto);
+  async updateUser(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateUserDto,
+  ): Promise<SafeUser> {
+    return this.userService.sanitizeUser(
+      await this.userService.updateUser(id, dto),
+    );
   }
 
   @Delete(':id')

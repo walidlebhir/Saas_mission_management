@@ -12,6 +12,11 @@ import {
 } from '../common/exception/index.js';
 import { Role } from './Entity/enum/Role.js';
 
+export type SafeUser = Omit<
+  User,
+  'passwordHash' | 'inviteToken' | 'inviteExpiresAt'
+>;
+
 @Injectable()
 export class UserService {
   constructor(
@@ -54,6 +59,19 @@ export class UserService {
 
   async getUsers(): Promise<User[]> {
     return this.UserRepository.find();
+  }
+
+  async getUsersByOrganization(organizationId: string): Promise<User[]> {
+    return this.UserRepository.find({ where: { organizationId } });
+  }
+
+  async findById(id: string): Promise<User | null> {
+    return this.UserRepository.findOne({ where: { id } });
+  }
+
+  sanitizeUser(user: User): SafeUser {
+    const { passwordHash: _passwordHash, inviteToken: _inviteToken, inviteExpiresAt: _inviteExpiresAt, ...safeUser } = user;
+    return safeUser as SafeUser;
   }
 
   async getUserById(id: string): Promise<User> {
@@ -99,4 +117,6 @@ export class UserService {
     const user = await this.getUserById(id);
     await this.UserRepository.remove(user);
   }
+
+
 }

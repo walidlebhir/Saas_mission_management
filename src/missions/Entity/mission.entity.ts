@@ -17,6 +17,8 @@ import { ExpenseCategory } from '../../expenses/Entity/enum/ExpenseCategory.js';
 
 @Entity('missions')
 export class Mission {
+
+
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

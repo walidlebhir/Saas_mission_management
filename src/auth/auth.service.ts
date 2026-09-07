@@ -1,4 +1,4 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import { Injectable, HttpException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -9,6 +9,8 @@ import { RegisterRequest } from './Dto/RegisterRequest.js';
 import { LoginRequest } from './Dto/LoginRequest.js';
 import { AuthUtil } from './auth.utils.js';
 import { Role } from '../users/Entity/enum/Role.js';
+import { UserService } from '../users/user.service.js';
+import { SafeUser } from '../users/user.service.js';
 import {
   ResourceExistsException,
   InvalidCredentialsException,
@@ -29,6 +31,7 @@ export class AuthService {
     @InjectRepository(RefreshToken)
     private readonly RefreshTokenRepository: Repository<RefreshToken>,
     private readonly jwtService: JwtService,
+    private readonly userService: UserService,
   ) {}
 
   async register(datarequest: RegisterRequest, deviceInfo?: string) {
@@ -118,4 +121,20 @@ export class AuthService {
 
     return this.jwtService.signAsync(payload);
   }
+
+  async checkConnection(userId: string): Promise<{ connected: boolean; user: SafeUser }> {
+    const user = await this.userService.findById(userId);
+
+    if (user === null) {
+      throw new UnauthorizedException();
+    }
+
+    return {
+      connected: true,
+      user: this.userService.sanitizeUser(user),
+    };
+  }
+
+
+
 }

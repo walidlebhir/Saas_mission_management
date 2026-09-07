@@ -23,6 +23,7 @@ export class User {
   @Column({ name: 'organization_id', type: 'uuid', nullable: true })
   organizationId: string;
 
+
   @ManyToOne(() => Organization, (organization) => organization.users, {
     onDelete: 'CASCADE',
   })
