@@ -16,6 +16,8 @@ import type { ExpenseComment } from './expense-comment.entity.js';
 
 @Entity('expenses')
 export class Expense {
+
+
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -28,12 +30,15 @@ export class Expense {
   @JoinColumn({ name: 'mission_id' })
   mission: Mission;
 
+
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
+
 
   @ManyToOne(() => User, (user) => user.expenses, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'user_id' })
   user: User;
+
 
   @Column({ name: 'submitted_by', type: 'uuid', nullable: true })
   submittedBy: string;
@@ -118,4 +123,5 @@ export class Expense {
 
   @OneToMany('expense_comments', (comment: any) => comment.expense)
   comments: ExpenseComment[];
+
 }

@@ -2,7 +2,6 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Plan } from './enum/Plan.js';
 import type { User } from '../../users/Entity/user.entity.js';
 import type { Mission } from '../../missions/Entity/mission.entity.js';
-import type { ExpenseCategoryLimit } from '../../expenses/Entity/expense-category-limit.entity.js';
 
 @Entity()
 export class Organization {
@@ -41,7 +40,4 @@ export class Organization {
 
   @OneToMany('missions', (mission: any) => mission.organization)
   missions: Mission[];
-
-  @OneToMany('expense_category_limits', (limit: any) => limit.organization)
-  categoryLimits: ExpenseCategoryLimit[];
 }

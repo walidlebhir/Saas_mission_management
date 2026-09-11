@@ -11,6 +11,8 @@ import { User } from '../../users/Entity/user.entity.js';
 
 @Entity('expense_comments')
 export class ExpenseComment {
+
+
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -35,4 +37,6 @@ export class ExpenseComment {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+
+
 }

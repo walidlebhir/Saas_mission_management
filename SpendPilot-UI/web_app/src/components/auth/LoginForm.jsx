@@ -1,36 +1,67 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { Eye, EyeOff } from 'lucide-react'
+import { useAuthStore } from '../../services/auth/auth.service.js'
 import TextField from './TextField.jsx'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const initialForm = { email: '', password: '', remember: false }
 
+function getDashboardPath(role) {
+  switch (role) {
+    case 'super_admin':
+    case 'finance':
+      return '/admin/dashboard'
+    case 'approver':
+      return '/admin/approvals'
+    case 'employee':
+      return '/employee/dashboard'
+    default:
+      return '/'
+  }
+}
+
 export default function LoginForm() {
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState({})
   const [showPassword, setShowPassword] = useState(false)
+  const [loginError, setLoginError] = useState(null)
+
+
+  const { login, isLoading } = useAuthStore();
+
+  const navigate = useNavigate()
+
 
   function handleChange(event) {
     const { name, value, type, checked } = event.target
     setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
     setErrors((prev) => ({ ...prev, [name]: undefined }))
+    setLoginError(null)
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     const nextErrors = {}
     if (!form.email.trim()) nextErrors.email = 'Email is required.'
     else if (!EMAIL_PATTERN.test(form.email)) nextErrors.email = 'Enter a valid email address.'
     if (!form.password) nextErrors.password = 'Password is required.'
-    else if (form.password.length < 6)
-      nextErrors.password = 'Password must be at least 6 characters.'
+    else if (form.password.length < 8)
+      nextErrors.password = 'Password must be at least 8 characters.'
 
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
-    toast.success('Welcome back! You are logged in.')
+
+    try {
+      const user = await login(form.email, form.password)
+      toast.success('Bienvenue ! Connexion réussie.')
+      const path = getDashboardPath(user.role)
+      navigate(path, { replace: true })
+    } catch {
+      setLoginError('Username or password is incorrect.')
+    }
   }
 
   return (
@@ -89,11 +120,18 @@ export default function LoginForm() {
           </a>
         </div>
 
+        {loginError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {loginError}
+          </div>
+        )}
+
         <button
           type="submit"
-          className="w-full rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition-colors hover:bg-blue-500"
+          disabled={isLoading}
+          className="w-full rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Login
+          {isLoading ? 'Connexion en cours...' : 'Login'}
         </button>
       </form>
 

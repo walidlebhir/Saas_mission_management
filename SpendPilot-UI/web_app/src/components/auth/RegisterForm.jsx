@@ -1,18 +1,35 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { Eye, EyeOff } from 'lucide-react'
+import { useAuthStore } from '../../services/auth/auth.service.js'
 import TextField from './TextField.jsx'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-const initialForm = { fullName: '', email: '', password: '', confirmPassword: '' }
+const initialForm = { firstName: '', lastName: '', email: '', password: '', confirmPassword: '' }
+
+function getDashboardPath(role) {
+  switch (role) {
+    case 'super_admin':
+    case 'finance':
+      return '/admin/dashboard'
+    case 'approver':
+      return '/admin/approvals'
+    case 'employee':
+      return '/employee/dashboard'
+    default:
+      return '/'
+  }
+}
 
 export default function RegisterForm() {
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState({})
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const { register, isLoading } = useAuthStore()
+  const navigate = useNavigate()
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -20,11 +37,12 @@ export default function RegisterForm() {
     setErrors((prev) => ({ ...prev, [name]: undefined }))
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     const nextErrors = {}
 
-    if (!form.fullName.trim()) nextErrors.fullName = 'Full name is required.'
+    if (!form.firstName.trim()) nextErrors.firstName = 'First name is required.'
+    if (!form.lastName.trim()) nextErrors.lastName = 'Last name is required.'
     if (!form.email.trim()) nextErrors.email = 'Email is required.'
     else if (!EMAIL_PATTERN.test(form.email)) nextErrors.email = 'Enter a valid email address.'
 
@@ -38,8 +56,15 @@ export default function RegisterForm() {
 
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
-    toast.success('Account created! Please sign in.')
-    setForm(initialForm)
+
+    try {
+      const user = await register(form.firstName, form.lastName, form.email, form.password)
+      toast.success('Compte créé ! Bienvenue sur SpendPilot.')
+      const path = getDashboardPath(user.role)
+      navigate(path, { replace: true })
+    } catch (err) {
+      toast.error(err.message || "Erreur d'inscription")
+    }
   }
 
   const passwordToggle = (show, toggle) => (
@@ -61,15 +86,26 @@ export default function RegisterForm() {
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
-        <TextField
-          label="Full Name"
-          name="fullName"
-          autoComplete="name"
-          placeholder="Jane Doe"
-          value={form.fullName}
-          onChange={handleChange}
-          error={errors.fullName}
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <TextField
+            label="First Name"
+            name="firstName"
+            autoComplete="given-name"
+            placeholder="Jane"
+            value={form.firstName}
+            onChange={handleChange}
+            error={errors.firstName}
+          />
+          <TextField
+            label="Last Name"
+            name="lastName"
+            autoComplete="family-name"
+            placeholder="Doe"
+            value={form.lastName}
+            onChange={handleChange}
+            error={errors.lastName}
+          />
+        </div>
 
         <TextField
           label="Email"
@@ -108,9 +144,10 @@ export default function RegisterForm() {
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition-colors hover:bg-blue-500"
+          disabled={isLoading}
+          className="w-full rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Create Account
+          {isLoading ? 'Création en cours...' : 'Create Account'}
         </button>
       </form>
 

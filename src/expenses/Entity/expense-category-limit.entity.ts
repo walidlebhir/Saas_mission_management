@@ -6,23 +6,25 @@ import {
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
-import { Organization } from '../../organizations/Entity/organization.entity.js';
+import { Mission } from '../../missions/Entity/mission.entity.js';
 import { ExpenseCategory } from './enum/ExpenseCategory.js';
 
 @Entity('expense_category_limits')
-@Unique('uq_organization_category', ['organizationId', 'category'])
+@Unique('uq_mission_category', ['missionId', 'category'])
 export class ExpenseCategoryLimit {
+
+
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'organization_id', type: 'uuid' })
-  organizationId: string;
+  @Column({ name: 'mission_id', type: 'uuid' })
+  missionId: string;
 
-  @ManyToOne(() => Organization, (organization) => organization.categoryLimits, {
+  @ManyToOne(() => Mission, (mission) => mission.categoryLimits, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'organization_id' })
-  organization: Organization;
+  @JoinColumn({ name: 'mission_id' })
+  mission: Mission;
 
   @Column({ type: 'enum', enum: ExpenseCategory })
   category: ExpenseCategory;
@@ -53,4 +55,5 @@ export class ExpenseCategoryLimit {
     default: 0,
   })
   requiresReceiptAbove: number;
+
 }

@@ -13,6 +13,7 @@ import { User } from '../../users/Entity/user.entity.js';
 import { MissionStatus } from './enum/MissionStatus.js';
 import type { MissionAssignment } from './mission-assignment.entity.js';
 import type { Expense } from '../../expenses/Entity/expense.entity.js';
+import type { ExpenseCategoryLimit } from '../../expenses/Entity/expense-category-limit.entity.js';
 import { ExpenseCategory } from '../../expenses/Entity/enum/ExpenseCategory.js';
 
 @Entity('missions')
@@ -89,4 +90,7 @@ export class Mission {
 
   @OneToMany('expenses', (expense: any) => expense.mission)
   expenses: Expense[];
+
+  @OneToMany('expense_category_limits', (limit: any) => limit.mission)
+  categoryLimits: ExpenseCategoryLimit[];
 }
